@@ -5,6 +5,9 @@ from ipywidgets import interact, FloatSlider, IntSlider
 import ipywidgets as widgets
 
 
+def hello(name):
+    print(name)
+
 def simulate_bankruptcy(initial_capital=1000000, claim_rate=5, avg_claim_size=50000,
                         investment_return=0.05, num_simulations=100):
     """Simulate multiple claim processes to determine time to bankruptcy"""
