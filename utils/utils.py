@@ -1,4 +1,3 @@
-# utils.py
 import numpy as np
 import matplotlib.pyplot as plt
 from ipywidgets import interact, FloatSlider, IntSlider
