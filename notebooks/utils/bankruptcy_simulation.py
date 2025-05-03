@@ -67,6 +67,3 @@ def create_dashboard():
         plt.show()
 
     # Create interactive widget
-    interact(update_plot,
-             claim_rate=claim_rate_slider,
-             avg_claim_size=avg_claim_size_slider)
