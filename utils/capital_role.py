@@ -5,6 +5,7 @@ import pandas as pd
 from ipywidgets import FloatSlider, IntSlider, interact
 from IPython.display import display
 
+
 def demonstrate_capital_role():
     """
     Demonstrates how capital protects an insurance company from bankruptcy
@@ -17,6 +18,9 @@ def demonstrate_capital_role():
         # Keep track of results for display
         nonlocal history
 
+        # Set random seed for consistent results
+        np.random.seed(42)
+
         # Base parameters
         annual_premium = 100.0  # $100M annual premium - consistent with balance sheet
         expected_loss_ratio = 0.65  # Expected losses are 65% of premium
@@ -27,8 +31,8 @@ def demonstrate_capital_role():
         initial_capital = capital_amount
         capital_ratio = initial_capital / annual_premium
 
-        # Run 100 simulations
-        num_simulations = 100
+        # Run more simulations for better consistency
+        num_simulations = 500
         results = []
 
         for sim in range(num_simulations):
@@ -94,10 +98,18 @@ def demonstrate_capital_role():
                 explode=(0.1, 0), textprops={'fontsize': 12})
         ax1.set_title(f'Survival Rate with ${capital_amount:.1f}M Initial Capital', fontsize=14)
 
-        # Plot 2: Years survived histogram
-        bins = np.arange(0.5, num_years + 1.5, 1)
+        # Plot 2: Years survived histogram - Adjust bins and labels based on years
+        if num_years <= 25:
+            # For smaller year ranges, use every year
+            bins = np.arange(0.5, num_years + 1.5, 1)
+            xticks = range(1, num_years + 1)
+        else:
+            # For larger year ranges, use bins at 5-year intervals
+            bins = np.arange(0.5, num_years + 1.5, 5)  # Bins every 5 years
+            xticks = range(5, num_years + 1, 5)  # Show labels every 5 years
+
         ax2.hist(years_survived, bins=bins, color='blue', alpha=0.7, edgecolor='black')
-        ax2.set_xticks(range(1, num_years + 1))
+        ax2.set_xticks(xticks)
         ax2.set_xlabel('Years Survived', fontsize=12)
         ax2.set_ylabel('Number of Companies', fontsize=12)
         ax2.set_title('Distribution of Survival Years', fontsize=14)
@@ -112,36 +124,57 @@ def demonstrate_capital_role():
         plt.tight_layout()
         plt.show()
 
-        # Display survival curve
+        # Display survival curve with adjusted labels for large year ranges
         plt.figure(figsize=(12, 6))
 
         # Calculate survival curve
         survival_counts = []
-        for year in range(1, num_years + 1):
-            survival_counts.append(sum(1 for y in years_survived if y >= year) / num_simulations)
 
-        plt.plot(range(1, num_years + 1), survival_counts, 'bo-', linewidth=2, markersize=10)
-        plt.xlabel('Year', fontsize=12)
-        plt.ylabel('Survival Probability', fontsize=12)
-        plt.title(f'Survival Curve with ${capital_amount:.1f}M Initial Capital', fontsize=14)
-        plt.grid(True, alpha=0.3)
-        plt.ylim(0, 1.05)
+        # Handle labeling differently based on number of years
+        if num_years <= 25:
+            # For smaller year ranges, calculate and show every year
+            years_to_show = range(1, num_years + 1)
+            for year in years_to_show:
+                survival_counts.append(sum(1 for y in years_survived if y >= year) / num_simulations)
 
-        # Add annotations
-        for year, rate in enumerate(survival_counts, 1):
-            plt.annotate(f'{rate:.0%}', (year, rate), textcoords="offset points",
-                         xytext=(0, 10), ha='center', fontsize=11)
+            # Plot every year point
+            plt.plot(years_to_show, survival_counts, 'bo-', linewidth=2, markersize=8)
 
-        # Add text box with key statistics
+            # Add annotations (every year)
+            for year, rate in enumerate(survival_counts, 1):
+                plt.annotate(f'{rate:.0%}', (year, rate), textcoords="offset points",
+                             xytext=(0, 10), ha='center', fontsize=10)
+        else:
+            # For larger year ranges, calculate every year but show every 5 years
+            full_survival_counts = []
+            for year in range(1, num_years + 1):
+                full_survival_counts.append(sum(1 for y in years_survived if y >= year) / num_simulations)
+
+            # Plot a smooth line using all years
+            plt.plot(range(1, num_years + 1), full_survival_counts, 'b-', linewidth=2)
+
+            # Plot markers only at 5-year intervals
+            years_to_show = range(5, num_years + 1, 5)
+            markers_survival = [full_survival_counts[y - 1] for y in years_to_show]
+            plt.plot(years_to_show, markers_survival, 'bo', markersize=8)
+
+            # Add annotations (every 5 years)
+            for i, year in enumerate(years_to_show):
+                rate = markers_survival[i]
+                plt.annotate(f'{rate:.0%}', (year, rate), textcoords="offset points",
+                             xytext=(0, 10), ha='center', fontsize=10)
+
+        # Add text box with key statistics - fixed at top-right for consistency
         stats_text = f"Initial Capital: ${initial_capital:.1f}M\n" \
                      f"Annual Premium: ${annual_premium:.1f}M\n" \
                      f"Capital Ratio: {capital_ratio:.1f}x Premium\n" \
                      f"Survival Rate (All {num_years} Years): {survival_rate:.1%}\n" \
                      f"Average Survival: {average_years:.1f} years"
 
-        plt.text(0.95, 0.05, stats_text, transform=plt.gca().transAxes, fontsize=12,
-                 verticalalignment='bottom', horizontalalignment='right',
-                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        # Simple positioning at top-right
+        plt.text(0.95, 0.95, stats_text, transform=plt.gca().transAxes, fontsize=12,
+                 verticalalignment='top', horizontalalignment='right',
+                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
 
         plt.tight_layout()
         plt.show()
