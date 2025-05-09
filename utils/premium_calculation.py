@@ -7,7 +7,7 @@ from IPython.display import display
 
 def demonstrate_premium_calculation():
     """
-    Demonstrates how insurance premiums are calculated with fixed overlapping text box
+    Demonstrates how insurance premiums are calculated with fixed layout
     """
     # History tracking
     history = []
@@ -45,9 +45,8 @@ def demonstrate_premium_calculation():
         if len(history) > 5:
             history.pop(0)
 
-        # Create figure - stack charts vertically for better readability
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 14),
-                                           gridspec_kw={'height_ratios': [1, 1, 0.5]})  # Third subplot for table
+        # Create figure - just TWO subplots (removed the empty one)
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
 
         # Plot 1: Premium components
         components = ['Expected Loss', 'Expenses', 'Risk Margin']
@@ -77,25 +76,25 @@ def demonstrate_premium_calculation():
                 textprops={'fontsize': 12})
         ax2.set_title(f'Premium Breakdown (Total: ${premium:.2f})', fontsize=14)
 
-        # Add a text box explaining the premium formula - FIXED POSITIONING
+        # Create a separate axis for the formula text - moved further right and further down
+        formula_ax = plt.axes([0.80, 0.15, 0.25, 0.25])  # Moved right by 32% and down by 35%
+        formula_ax.axis('off')  # Hide axis
+
+        # Formula text content
         formula_text = f"Premium Calculation:\n\n" \
                        f"• Expected Loss = Frequency × Severity\n" \
                        f"  = {accident_frequency:.1%} × ${claim_severity:,.0f}\n" \
                        f"  = ${expected_loss:.2f}\n\n" \
                        f"• Premium = Expected Loss / (1 - Expense% - Risk%)\n" \
                        f"  = ${expected_loss:.2f} / (1 - {expense_ratio:.0%} - {risk_margin_ratio:.0%})\n" \
-                       f"  = ${premium:.2f}\n\n" \
-                       f"• Loading Factor = {loading_factor:.2f}"
+                       f"  = ${premium:.2f}"
 
-        # Create a separate axis for the formula text to avoid overlap
-        # Position it to the right of the pie chart to avoid conflicts
-        formula_ax = fig.add_axes([0.58, 0.35, 0.35, 0.25])  # [left, bottom, width, height]
-        formula_ax.axis('off')  # Hide axis
+        # Add the formula text to the axis
         formula_ax.text(0, 0.5, formula_text, fontsize=12,
-                       verticalalignment='center', horizontalalignment='left',
-                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+                        verticalalignment='center', horizontalalignment='left',
+                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
 
-        # Adjust spacing between subplots
+        # Adjust spacing using subplots_adjust instead of tight_layout
         plt.subplots_adjust(hspace=0.4)
         plt.show()
 

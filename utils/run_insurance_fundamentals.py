@@ -56,10 +56,10 @@ def run_insurance_fundamentals():
     ])
 
     # Set tab titles
-    tabs.set_title(0, "1. Law of Large Numbers")
+    tabs.set_title(0, "1. Law of Lrg No's")
     tabs.set_title(1, "2. Risk Pooling")
     tabs.set_title(2, "3. Balance Sheet")
-    tabs.set_title(3, "4. Premium Calculation")
+    tabs.set_title(3, "4. Premium Calc")
     tabs.set_title(4, "5. Role of Capital")
 
     # Function to run the appropriate demo when tab is selected
