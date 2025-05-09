@@ -1,5 +1,4 @@
-
-# capital_role.py module contents here
+# fixed_capital_role.py
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,19 +12,20 @@ def demonstrate_capital_role():
     # History tracking
     history = []
 
-    def update_plot(capital_ratio=0.5, num_years=10):
-        """Update the capital simulation"""
+    def update_plot(capital_amount=50, num_years=10):
+        """Update the capital simulation using absolute capital in millions"""
         # Keep track of results for display
         nonlocal history
 
         # Base parameters
-        annual_premium = 1000000  # $1M annual premium
+        annual_premium = 100.0  # $100M annual premium - consistent with balance sheet
         expected_loss_ratio = 0.65  # Expected losses are 65% of premium
         expense_ratio = 0.30  # Expenses are 30% of premium
         investment_return = 0.05  # 5% annual return on investments
 
-        # Calculate capital amount based on selected ratio
-        initial_capital = annual_premium * capital_ratio
+        # Calculate capital amount based on selected amount in millions
+        initial_capital = capital_amount
+        capital_ratio = initial_capital / annual_premium
 
         # Run 100 simulations
         num_simulations = 100
@@ -74,7 +74,7 @@ def demonstrate_capital_role():
 
         # Store in history (limit to 5 items)
         history.append({
-            'capital_ratio': capital_ratio,
+            'capital_amount': capital_amount,
             'initial_capital': initial_capital,
             'num_years': num_years,
             'survival_rate': survival_rate,
@@ -83,60 +83,63 @@ def demonstrate_capital_role():
         if len(history) > 5:
             history.pop(0)
 
-        # Create figure
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        # Create figure - stacked vertically for better readability
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12))
 
         # Plot 1: Survival distribution
         survived = [y >= num_years for y in years_survived]
         ax1.pie([sum(survived), len(survived) - sum(survived)],
                 labels=[f'Survived all {num_years} years', 'Failed before year ' + str(num_years)],
                 colors=['green', 'red'], autopct='%1.1f%%', startangle=90,
-                explode=(0.1, 0))
-        ax1.set_title(f'Survival Rate with {capital_ratio:.0%} Capital Ratio')
+                explode=(0.1, 0), textprops={'fontsize': 12})
+        ax1.set_title(f'Survival Rate with ${capital_amount:.1f}M Initial Capital', fontsize=14)
 
         # Plot 2: Years survived histogram
         bins = np.arange(0.5, num_years + 1.5, 1)
         ax2.hist(years_survived, bins=bins, color='blue', alpha=0.7, edgecolor='black')
         ax2.set_xticks(range(1, num_years + 1))
-        ax2.set_xlabel('Years Survived')
-        ax2.set_ylabel('Number of Companies')
-        ax2.set_title('Distribution of Survival Years')
+        ax2.set_xlabel('Years Survived', fontsize=12)
+        ax2.set_ylabel('Number of Companies', fontsize=12)
+        ax2.set_title('Distribution of Survival Years', fontsize=14)
 
         # Add a vertical line for average
         ax2.axvline(average_years, color='red', linestyle='--',
                     label=f'Average: {average_years:.1f} years')
-        ax2.legend()
+        ax2.legend(fontsize=12)
 
+        # Adjust spacing between subplots
+        plt.subplots_adjust(hspace=0.3)
         plt.tight_layout()
         plt.show()
 
         # Display survival curve
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 6))
 
         # Calculate survival curve
         survival_counts = []
         for year in range(1, num_years + 1):
             survival_counts.append(sum(1 for y in years_survived if y >= year) / num_simulations)
 
-        plt.plot(range(1, num_years + 1), survival_counts, 'bo-', linewidth=2, markersize=8)
-        plt.xlabel('Year')
-        plt.ylabel('Survival Probability')
-        plt.title(f'Survival Curve with {capital_ratio:.0%} Capital Ratio')
+        plt.plot(range(1, num_years + 1), survival_counts, 'bo-', linewidth=2, markersize=10)
+        plt.xlabel('Year', fontsize=12)
+        plt.ylabel('Survival Probability', fontsize=12)
+        plt.title(f'Survival Curve with ${capital_amount:.1f}M Initial Capital', fontsize=14)
         plt.grid(True, alpha=0.3)
         plt.ylim(0, 1.05)
 
         # Add annotations
         for year, rate in enumerate(survival_counts, 1):
             plt.annotate(f'{rate:.0%}', (year, rate), textcoords="offset points",
-                         xytext=(0, 10), ha='center')
+                         xytext=(0, 10), ha='center', fontsize=11)
 
         # Add text box with key statistics
-        stats_text = f"Initial Capital: ${initial_capital:,.0f}\n" \
-                     f"Capital Ratio: {capital_ratio:.0%}\n" \
+        stats_text = f"Initial Capital: ${initial_capital:.1f}M\n" \
+                     f"Annual Premium: ${annual_premium:.1f}M\n" \
+                     f"Capital Ratio: {capital_ratio:.1f}x Premium\n" \
                      f"Survival Rate (All {num_years} Years): {survival_rate:.1%}\n" \
                      f"Average Survival: {average_years:.1f} years"
 
-        plt.text(0.95, 0.05, stats_text, transform=plt.gca().transAxes, fontsize=10,
+        plt.text(0.95, 0.05, stats_text, transform=plt.gca().transAxes, fontsize=12,
                  verticalalignment='bottom', horizontalalignment='right',
                  bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
@@ -149,8 +152,7 @@ def demonstrate_capital_role():
         for i, h in enumerate(history, 1):
             history_table.append({
                 'Run': i,
-                'Capital Ratio': f"{h['capital_ratio']:.0%}",
-                'Initial Capital': f"${h['initial_capital']:,.0f}",
+                'Initial Capital': f"${h['capital_amount']:.1f}M",
                 'Simulation Years': h['num_years'],
                 'Survival Rate': f"{h['survival_rate']:.1%}",
                 'Average Survival': f"{h['average_years']:.1f} years"
@@ -162,30 +164,30 @@ def demonstrate_capital_role():
         print("\nInsurance Interpretation:")
         print(f"• Capital serves as a buffer against unexpected losses.")
         print(
-            f"• With a {capital_ratio:.0%} capital ratio (${initial_capital:,.0f}), {survival_rate:.1%} of companies survived all {num_years} years.")
-        print(f"• Higher capital ratios mean better protection against insolvency.")
+            f"• With ${capital_amount:.1f}M of initial capital ({capital_ratio:.1f}x annual premium), {survival_rate:.1%} of companies survived all {num_years} years.")
+        print(f"• Higher capital amounts mean better protection against insolvency.")
         print(f"• Insurance regulators require minimum capital levels to ensure companies can pay claims.")
 
         if survival_rate < 0.90:
             print(f"• Warning: This capital level may be inadequate for long-term stability.")
-            print(f"• Recommendation: Increase capital ratio to improve survival probability.")
+            print(f"• Recommendation: Increase capital to improve survival probability.")
         else:
             print(f"• This capital level appears adequate with a high survival probability.")
 
-    # Create interactive widgets
+    # Create interactive widgets - now using capital in absolute dollars
     capital_slider = FloatSlider(
-        min=0.1,
-        max=1.0,
-        step=0.1,
-        value=0.5,
-        description='Capital Ratio:',
+        min=10,
+        max=100,
+        step=10,
+        value=50,
+        description='Initial Capital ($M):',
         style={'description_width': 'initial'},
         continuous_update=False
     )
 
     year_slider = IntSlider(
         min=5,
-        max=30,
+        max=100,
         step=5,
         value=10,
         description='Simulation Years:',
@@ -194,5 +196,5 @@ def demonstrate_capital_role():
     )
 
     interact(update_plot,
-             capital_ratio=capital_slider,
+             capital_amount=capital_slider,
              num_years=year_slider)

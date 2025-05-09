@@ -1,5 +1,4 @@
-
-# premium_calculation.py module contents here
+# fixed_premium_calculation.py
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,7 +7,7 @@ from IPython.display import display
 
 def demonstrate_premium_calculation():
     """
-    Demonstrates how insurance premiums are calculated
+    Demonstrates how insurance premiums are calculated with fixed overlapping text box
     """
     # History tracking
     history = []
@@ -46,8 +45,9 @@ def demonstrate_premium_calculation():
         if len(history) > 5:
             history.pop(0)
 
-        # Create figure
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        # Create figure - stack charts vertically for better readability
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 14),
+                                           gridspec_kw={'height_ratios': [1, 1, 0.5]})  # Third subplot for table
 
         # Plot 1: Premium components
         components = ['Expected Loss', 'Expenses', 'Risk Margin']
@@ -55,13 +55,13 @@ def demonstrate_premium_calculation():
         colors = ['blue', 'orange', 'green']
 
         bars = ax1.bar(components, values, color=colors, alpha=0.7)
-        ax1.set_title('Premium Components')
-        ax1.set_ylabel('Amount ($)')
+        ax1.set_title('Premium Components', fontsize=14)
+        ax1.set_ylabel('Amount ($)', fontsize=12)
         ax1.grid(axis='y', alpha=0.3)
 
         # Add a line for total premium
         ax1.axhline(premium, color='red', linestyle='--', label=f'Total Premium: ${premium:.2f}')
-        ax1.legend()
+        ax1.legend(fontsize=12)
 
         # Add text annotations for each component
         for bar, value, component in zip(bars, values, components):
@@ -69,13 +69,15 @@ def demonstrate_premium_calculation():
             ax1.text(bar.get_x() + bar.get_width() / 2, value / 2,
                      f'${value:.2f}\n({percentage:.1f}%)',
                      ha='center', va='center',
-                     color='white' if value > 100 else 'black')
+                     color='white' if value > 100 else 'black',
+                     fontsize=11)
 
         # Plot 2: Breakdown in pie chart
-        ax2.pie(values, labels=components, colors=colors, autopct='%1.1f%%', startangle=90)
-        ax2.set_title(f'Premium Breakdown (Total: ${premium:.2f})')
+        ax2.pie(values, labels=components, colors=colors, autopct='%1.1f%%', startangle=90,
+                textprops={'fontsize': 12})
+        ax2.set_title(f'Premium Breakdown (Total: ${premium:.2f})', fontsize=14)
 
-        # Add a text box explaining the premium formula
+        # Add a text box explaining the premium formula - FIXED POSITIONING
         formula_text = f"Premium Calculation:\n\n" \
                        f"• Expected Loss = Frequency × Severity\n" \
                        f"  = {accident_frequency:.1%} × ${claim_severity:,.0f}\n" \
@@ -85,11 +87,16 @@ def demonstrate_premium_calculation():
                        f"  = ${premium:.2f}\n\n" \
                        f"• Loading Factor = {loading_factor:.2f}"
 
-        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-        ax2.text(0.95, 0.05, formula_text, transform=ax2.transAxes, fontsize=10,
-                 verticalalignment='bottom', horizontalalignment='right', bbox=props)
+        # Create a separate axis for the formula text to avoid overlap
+        # Position it to the right of the pie chart to avoid conflicts
+        formula_ax = fig.add_axes([0.58, 0.35, 0.35, 0.25])  # [left, bottom, width, height]
+        formula_ax.axis('off')  # Hide axis
+        formula_ax.text(0, 0.5, formula_text, fontsize=12,
+                       verticalalignment='center', horizontalalignment='left',
+                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
-        plt.tight_layout()
+        # Adjust spacing between subplots
+        plt.subplots_adjust(hspace=0.4)
         plt.show()
 
         # Display history table
@@ -116,7 +123,6 @@ def demonstrate_premium_calculation():
         print(f"• Expenses: ${expenses:.2f} ({expense_ratio:.0%} of premium for administration, commissions, etc.)")
         print(f"• Risk Margin: ${risk_margin:.2f} ({risk_margin_ratio:.0%} of premium for profit and uncertainty)")
         print(f"• Final Premium: ${premium:.2f}")
-        print(f"• Loading Factor: {loading_factor:.2f} (Premium ÷ Expected Loss)")
         print("\nThis is the base premium before applying individual rating factors like age, driving history, etc.")
 
     # Create interactive widgets

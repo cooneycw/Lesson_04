@@ -1,10 +1,10 @@
-
-# balance_sheet.py module contents here
+# fixed_balance_sheet.py
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from ipywidgets import FloatSlider, interact
 from IPython.display import display
+
 
 def demonstrate_balance_sheet():
     """
@@ -40,15 +40,13 @@ def demonstrate_balance_sheet():
 
         # Balance sheet components
         assets = {
-            'Cash & Investments': investable_assets,
             'Premiums Receivable': premium_revenue * 0.1,  # 10% of premium not yet collected
-            'Other Assets': premium_revenue * 0.05  # 5% in other assets
+            'Cash & Investments': investable_assets
         }
 
         liabilities = {
             'Loss Reserves': expected_losses,
-            'Unearned Premium': premium_revenue * 0.5,  # Assume 50% of premiums unearned
-            'Other Liabilities': expenses * 0.5  # Half of expenses not yet paid
+            'Unearned Premium': premium_revenue * 0.5  # Assume 50% of premiums unearned
         }
 
         # Total assets and liabilities
@@ -75,39 +73,55 @@ def demonstrate_balance_sheet():
         if len(history) > 5:
             history.pop(0)
 
-        # Create figure with three subplots
-        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16, 6))
+        # Create figure with three vertically stacked subplots
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 15))
 
-        # Plot 1: Balance Sheet
-        assets_data = pd.Series(assets)
-        liabilities_data = pd.Series(liabilities)
+        # Plot 1: Balance Sheet - FIXED VERSION
+        # Instead of using pandas Series plot which creates tick issues,
+        # we'll create a custom bar chart that gives us more control
 
-        # Add capital to liabilities side (to balance)
-        liabilities_plot = liabilities_data.copy()
-        liabilities_plot['Capital (Equity)'] = capital
+        # Create x positions for the two groups of bars - wider spacing for better readability
+        x_pos = [0.3, 1.7]
 
-        # Create stacked bar chart
-        assets_data.plot(kind='bar', ax=ax1, position=0, width=0.4, color='lightblue')
-        liabilities_plot.plot(kind='bar', ax=ax1, position=1, width=0.4,
-                              color=['lightgreen', 'lightgreen', 'lightgreen', 'gold'])
+        # Create the stacked bar for Assets side
+        asset_values = list(assets.values())
+        asset_bottom = 0
+        asset_colors = ['cornflowerblue', 'skyblue']  # Reversed colors for reversed order
+        for i, value in enumerate(asset_values):
+            ax1.bar(x_pos[0], value, bottom=asset_bottom, width=0.8, color=asset_colors[i], alpha=0.7)
+            ax1.text(x_pos[0], asset_bottom + value / 2, f'{list(assets.keys())[i]}\n${value:.1f}M',
+                     ha='center', va='center', fontsize=11)
+            asset_bottom += value
+
+        # Create the stacked bar for Liabilities & Capital side
+        liab_capital_values = list(liabilities.values()) + [capital]
+        liab_capital_colors = ['lightgreen', 'mediumseagreen', 'gold']  # Distinct greens + gold for capital
+        liab_bottom = 0
+        for i, value in enumerate(liab_capital_values):
+            color = liab_capital_colors[i]
+            name = list(liabilities.keys())[i] if i < len(liabilities) else 'Capital (Equity)'
+            ax1.bar(x_pos[1], value, bottom=liab_bottom, width=0.8, color=color, alpha=0.7)
+            ax1.text(x_pos[1], liab_bottom + value / 2, f'{name}\n${value:.1f}M',
+                     ha='center', va='center', fontsize=11)
+            liab_bottom += value
+
+        # Set x-axis labels properly
+        ax1.set_xticks(x_pos)
+        ax1.set_xticklabels(['Assets', 'Liabilities & Capital'])
 
         ax1.set_title('Balance Sheet (in $ millions)')
         ax1.set_ylabel('Amount ($ millions)')
-        ax1.set_xticklabels(['Assets', 'Liabilities & Capital'])
 
-        # Add totals on top of bars
-        ax1.text(0, total_assets + 2, f'${total_assets:.1f}M', ha='center')
-        ax1.text(1, total_assets + 2, f'${total_liabilities + capital:.1f}M', ha='center')
+        # Add totals adjacent to the bars instead of on top
+        ax1.text(0.35, total_assets * 0.95, f'Total: ${total_assets:.1f}M', ha='left', fontsize=12,
+                 bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.3'))
+        ax1.text(1.35, (total_liabilities + capital) * 0.95, f'Total: ${total_liabilities + capital:.1f}M', ha='left',
+                 fontsize=12,
+                 bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.3'))
 
-        # Add annotations
-        for i, (name, value) in enumerate(assets.items()):
-            ax1.text(0, sum(list(assets.values())[:i]) + value / 2, f'{name}\n${value:.1f}M', ha='center')
-
-        offset = 0
-        for i, (name, value) in enumerate(liabilities_plot.items()):
-            color = 'black'
-            ax1.text(1, offset + value / 2, f'{name}\n${value:.1f}M', ha='center', color=color)
-            offset += value
+        # Set limits to make room for the labels
+        ax1.set_ylim(0, total_assets * 1.1)
+        ax1.set_xlim(-0.5, 2.5)
 
         # Plot 2: Income components
         income_components = {
@@ -152,30 +166,32 @@ def demonstrate_balance_sheet():
         ax2.set_ylabel('Amount ($ millions)')
         ax2.grid(axis='y', alpha=0.3)
 
-        # Plot 3: Capital Ratio
-        min_capital_ratio = 0.5  # Regulatory minimum
+        # Plot 3: Capital in absolute dollars instead of as a ratio
+        min_capital = premium_revenue * 0.5  # Regulatory minimum capital (50% of premium)
 
-        # Create horizontal bar for capital ratio
-        ax3.barh(['Capital Ratio'], [capital_ratio], color='green' if capital_ratio >= min_capital_ratio else 'red',
+        # Create horizontal bar for capital
+        ax3.barh(['Current Capital'], [capital], color='green' if capital >= min_capital else 'red',
                  alpha=0.7)
-        ax3.barh(['Minimum Required'], [min_capital_ratio], color='red', alpha=0.3)
+        ax3.barh(['Minimum Required'], [min_capital], color='red', alpha=0.3)
 
-        ax3.set_title('Capital Ratio (Capital / Premium)')
-        ax3.set_xlabel('Ratio')
-        ax3.set_xlim(0, max(1.0, capital_ratio * 1.2))
+        ax3.set_title('Capital Requirements (in $ millions)')
+        ax3.set_xlabel('Amount ($ millions)')
+        ax3.set_xlim(0, max(min_capital, capital) * 1.2)
 
         # Add annotations
-        ax3.text(capital_ratio, 0, f'{capital_ratio:.2f}', va='center')
-        ax3.text(min_capital_ratio, 1, f'{min_capital_ratio:.2f} (Minimum)', va='center')
+        ax3.text(capital, 0, f'${capital:.1f}M', va='center')
+        ax3.text(min_capital, 1, f'${min_capital:.1f}M (Minimum)', va='center')
 
         # Add interpretation text
-        status = "ADEQUATE" if capital_ratio >= min_capital_ratio else "INADEQUATE"
-        color = "green" if capital_ratio >= min_capital_ratio else "red"
+        status = "ADEQUATE" if capital >= min_capital else "INADEQUATE"
+        color = "green" if capital >= min_capital else "red"
 
         ax3.text(0.5, 0.5, f"Capital Status: {status}", transform=ax3.transAxes,
-                 ha='center', va='center', fontsize=14, color=color,
+                 ha='center', va='center', fontsize=16, color=color,
                  bbox=dict(facecolor='white', alpha=0.8, boxstyle='round,pad=0.5'))
 
+        # Adjust spacing between subplots for better layout
+        plt.subplots_adjust(hspace=0.4)
         plt.tight_layout()
         plt.show()
 
