@@ -1,14 +1,15 @@
-
-# law_of_large_numbers.py module contents here
+# improved_law_of_large_numbers.py
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from ipywidgets import FloatSlider, interact
 from IPython.display import display
 
+
 def demonstrate_law_of_large_numbers(true_probability=0.05):
     """
     Demonstrates the Law of Large Numbers using an insurance claims example
+    with improved number formatting
     """
     # History tracking
     history = []
@@ -54,6 +55,15 @@ def demonstrate_law_of_large_numbers(true_probability=0.05):
         ax1.grid(True, alpha=0.3)
         ax1.legend()
 
+        # Format x-tick labels to avoid scientific notation for numbers under 1 million
+        def format_number(x, pos):
+            if x >= 1000000:
+                return f'{x / 1000000:.0f}M'
+            return f'{x:.0f}'
+
+        from matplotlib.ticker import FuncFormatter
+        ax1.xaxis.set_major_formatter(FuncFormatter(format_number))
+
         # Add text annotations for each point
         for i, row in df.iterrows():
             ax1.annotate(f"{row['observed_probability']:.1%}",
@@ -68,6 +78,7 @@ def demonstrate_law_of_large_numbers(true_probability=0.05):
         ax2.set_ylabel('Error (|Observed - True|)')
         ax2.set_title('Error vs. Sample Size')
         ax2.grid(True, alpha=0.3)
+        ax2.xaxis.set_major_formatter(FuncFormatter(format_number))
 
         # Add text annotations for each point
         for i, row in df.iterrows():
