@@ -27,6 +27,9 @@ def demonstrate_balance_sheet():
         expenses = premium_revenue * 0.25  # Fixed expense ratio of 25%
         required_capital = premium_revenue * 0.5  # Regulatory minimum capital
 
+        # Define the minimum capital ratio - this was missing and causing the error
+        min_capital_ratio = 0.5  # Matches the required_capital calculation above
+
         # Calculate underwriting profit/loss
         underwriting_result = premium_revenue - expected_losses - expenses
 
